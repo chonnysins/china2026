@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>East by Northeast — A China Winter Journey</title>
+<title>Trips by Ronnie and Josh — A China Winter Journey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=Raleway:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
 <style>
 /* ---- Leaflet 1.9.4 (bundled, no CDN needed) ---- */
 /* required styles */
@@ -697,7 +697,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
   body{
     margin:0;background:var(--ink);color:var(--paper);
-    font-family:"Inter",system-ui,sans-serif;line-height:1.55;
+    font-family:"Raleway","Inter",system-ui,sans-serif;line-height:1.55;
     -webkit-font-smoothing:antialiased;overflow-x:hidden;
   }
   /* subtle atmospheric wash */
@@ -977,6 +977,63 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .tcard.warn h3{color:var(--cq)}
 
   footer{text-align:center;padding:44px 0 60px;color:var(--muted);font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.04em}
+
+  /* ---------- photo galleries & upload ---------- */
+  .snaps{padding:30px 0 8px}
+  .snaps h2{font-size:clamp(24px,4.5vw,34px)}
+  .snaps-sub{color:var(--muted);font-size:14px;margin:8px 0 18px;max-width:560px}
+  .gallery{position:relative;width:100%;aspect-ratio:16/10;border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;background:var(--ink-3)}
+  .gallery.gallery-lg{aspect-ratio:16/8}
+  .region .gallery{margin:16px 0 4px;aspect-ratio:16/9}
+  .gallery .gph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .7s ease}
+  .gallery .gph.show{opacity:1}
+  .gallery .gph-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:9px;text-align:center;padding:18px;color:var(--muted);font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.02em}
+  .gallery .gph-state svg{opacity:.45}
+  .gallery .gph-mini{font-family:"Space Mono",monospace;font-size:11px;border:1px solid var(--line);
+    background:var(--ink-2);color:var(--paper);border-radius:999px;padding:6px 13px;cursor:pointer;transition:border-color .2s,color .2s}
+  .gallery .gph-mini:hover{border-color:var(--accent);color:var(--accent)}
+  .gallery .gph-dots{position:absolute;left:0;right:0;bottom:9px;display:flex;gap:5px;justify-content:center;z-index:3;pointer-events:none}
+  .gallery .gph-dots i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.5);box-shadow:0 0 3px rgba(0,0,0,.35);transition:background .3s,transform .3s}
+  .gallery .gph-dots i.on{background:#fff;transform:scale(1.35)}
+  .gallery .gph-grad{position:absolute;left:0;right:0;bottom:0;height:46px;z-index:2;pointer-events:none;
+    background:linear-gradient(0deg,rgba(0,0,0,.28),transparent)}
+  .gallery.is-empty .gph-grad,.gallery.is-error .gph-grad{display:none}
+
+  .up-fab{position:fixed;right:18px;bottom:18px;z-index:60;display:flex;align-items:center;gap:9px;
+    font-family:"Space Mono",monospace;font-size:13px;font-weight:700;letter-spacing:.02em;
+    background:var(--accent);color:#fff;border:0;border-radius:999px;padding:13px 18px;cursor:pointer;
+    box-shadow:0 8px 24px rgba(14,158,142,.32);transition:transform .15s,box-shadow .15s}
+  .up-fab:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(14,158,142,.4)}
+  .up-fab svg{display:block}
+  @media(max-width:560px){.up-fab span{display:none}.up-fab{padding:14px;border-radius:50%}}
+  .up-modal{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:20px;
+    background:rgba(24,34,45,.42);backdrop-filter:blur(4px)}
+  .up-modal.open{display:flex}
+  .up-card{width:100%;max-width:440px;background:var(--ink-2);border:1px solid var(--line);border-radius:18px;
+    padding:22px;box-shadow:0 30px 70px rgba(24,34,45,.28);max-height:90vh;overflow:auto}
+  .up-card h3{font-family:"Bricolage Grotesque";font-weight:800;font-size:21px;margin:0 0 3px}
+  .up-card .up-x{float:right;border:0;background:transparent;font-size:24px;line-height:1;color:var(--muted);cursor:pointer;margin:-4px -4px 0 0}
+  .up-card p.up-lead{color:var(--muted);font-size:13px;margin:0 0 16px}
+  .up-field{margin-bottom:13px}
+  .up-field label{display:block;font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .up-field select,.up-field input[type=text],.up-field input[type=password]{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--ink-3);
+    color:var(--paper);font-family:"Raleway","Inter",sans-serif;font-size:14px}
+  .up-drop{border:1.5px dashed var(--line);border-radius:12px;padding:18px;text-align:center;cursor:pointer;
+    color:var(--muted);font-size:13px;transition:border-color .2s,background .2s}
+  .up-drop:hover,.up-drop.drag{border-color:var(--accent);background:var(--ink-3)}
+  .up-drop b{color:var(--accent)}
+  .up-thumbs{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+  .up-thumbs .ut{width:54px;height:54px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+  .up-thumbs .ut img{width:100%;height:100%;object-fit:cover}
+  .up-go{width:100%;margin-top:16px;border:0;border-radius:11px;background:var(--accent);color:#fff;
+    font-family:"Space Mono",monospace;font-weight:700;font-size:13px;letter-spacing:.04em;padding:13px;cursor:pointer;transition:opacity .2s}
+  .up-go[disabled]{opacity:.45;cursor:default}
+  .up-status{font-family:"Space Mono",monospace;font-size:11.5px;color:var(--muted);text-align:center;margin-top:11px;min-height:16px}
+  .up-status.ok{color:var(--accent)}
+  .up-status.err{color:#C0492F}
   footer .hr{height:1px;background:var(--line);margin-bottom:26px}
   footer b{color:var(--paper)}
 </style>
@@ -985,7 +1042,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 <header class="bar">
   <div class="bar-in">
-    <span class="brand">East by <b>Northeast</b></span>
+    <span class="brand">Trips by Ronnie and <b>Josh</b></span>
     <nav class="pills" id="pills"></nav>
   </div>
 </header>
@@ -1010,13 +1067,21 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="jump" id="jumpWrap"><button id="jumpBtn">Jump to today →</button></div>
     </div>
 
-    <div class="map" id="map"></div>
   </section>
+
+  <!-- BOOKINGS — moved directly under the countdown -->
+  <section class="bookings" id="bookings"></section>
+
+  <div class="map" id="map"></div>
 
   <div class="glance" id="glance"></div>
 
-  <!-- BOOKINGS -->
-  <section class="bookings" id="bookings"></section>
+  <!-- OUR PHOTOS — live shuffle of everything uploaded -->
+  <section class="snaps" id="snaps">
+    <h2>Our snapshots</h2>
+    <p class="snaps-sub">Photos you and Ronnie upload land here and on each destination below — they shuffle every few seconds.</p>
+    <div class="gallery gallery-lg" data-tag="" data-global="1"></div>
+  </section>
 
   <!-- regions render here -->
   <div id="regions"></div>
@@ -1256,7 +1321,7 @@ const TRIP = {
       ]
     },
     {
-      id:"finale", name:"Shanghai Finale", short:"Shanghai again", accent:"#0E9E8E", accent2:"#C58A2A",
+      id:"finale", name:"Shanghai Finale", short:"Shanghai - Finale", accent:"#0E9E8E", accent2:"#C58A2A",
       dates:"Jan 7 – 9", mapDate:"7 Jan", nights:2, num:"04",
       vibe:"One last hit of the future-city — anything you missed, a farewell feast with a Bund view, and a slow morning before the long flight home.",
       budget:{total:1020, perNight:140,
@@ -1682,6 +1747,7 @@ TRIP.legs.forEach(leg=>{
       <span class="rmeta">${leg.dates}<br>${leg.nights} nights</span>
     </div>
     <p class="rvibe">${leg.vibe}</p>
+    <div class="gallery" data-tag="${leg.id}"></div>
     ${mapsHtml}
 
     <div class="budget">
@@ -1975,6 +2041,171 @@ $("#jumpBtn").addEventListener("click",()=>{
   const el=$(".day.today")||$(".region");
   if(el)el.scrollIntoView({behavior:"smooth",block:"center"});
 });
+
+/* ============================================================
+   PHOTO UPLOAD + SHUFFLING CAROUSELS  (Netlify Function backend)
+   Same-origin: if the site loads in China, this loads too.
+   Fully non-blocking — the page works with or without the backend.
+   ============================================================ */
+(function(){
+  const API="/.netlify/functions/photos";
+  const SHUFFLE_MS=3000;
+  const DESTS=TRIP.legs.map(l=>({id:l.id,label:l.short}));
+
+  const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+  const imgURL=id=>API+"?id="+encodeURIComponent(id);
+
+  function Gallery(el){
+    const tag=el.dataset.tag||"";
+    let ids=[],order=[],pos=0,timer=null,imgs=[],paused=false,front=0;
+
+    function showState(kind){
+      el.classList.remove("is-empty","is-error");
+      el.classList.add(kind==="empty"?"is-empty":"is-error");
+      if(kind==="empty"){
+        el.innerHTML=`<div class="gph-state"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5L5 19"/></svg><div>No photos here yet</div><button class="gph-mini" data-open-up="${tag}">＋ Add the first one</button></div>`;
+      } else {
+        el.innerHTML=`<div class="gph-state"><div>Couldn't load photos</div><button class="gph-mini" data-retry="1">Retry</button></div>`;
+      }
+    }
+    function build(){
+      el.classList.remove("is-empty","is-error");
+      el.innerHTML=`<div class="gph-grad"></div><div class="gph-dots"></div>`;
+      imgs=[];
+      for(let k=0;k<2;k++){const im=document.createElement("img");im.className="gph";im.alt="";im.loading="lazy";im.decoding="async";el.insertBefore(im,el.firstChild);imgs.push(im);}
+    }
+    function renderDots(){
+      const d=el.querySelector(".gph-dots");if(!d)return;
+      if(ids.length<=1||ids.length>12){d.innerHTML="";return;}
+      d.innerHTML=ids.map((_,i)=>`<i class="${i===order[pos]?'on':''}"></i>`).join("");
+    }
+    function show(i){
+      const id=ids[order[i]];if(!id)return;
+      const cur=imgs[front],nxt=imgs[front^1];
+      nxt.onload=()=>{nxt.classList.add("show");cur.classList.remove("show");front^=1;renderDots();};
+      nxt.src=imgURL(id);
+      const nid=ids[order[(i+1)%order.length]];if(nid){const p=new Image();p.src=imgURL(nid);}
+    }
+    function step(){if(paused||order.length<2)return;pos=(pos+1)%order.length;show(pos);}
+    function start(){stop();if(order.length>1)timer=setInterval(step,SHUFFLE_MS);}
+    function stop(){if(timer){clearInterval(timer);timer=null;}}
+    function load(){
+      stop();
+      fetch(API+"?list=1"+(tag?"&tag="+encodeURIComponent(tag):""),{cache:"no-store"})
+        .then(r=>{if(!r.ok)throw 0;return r.json();})
+        .then(j=>{
+          ids=(j.photos||[]).map(p=>p.id);
+          if(!ids.length){showState("empty");return;}
+          build();order=shuffle(ids.map((_,i)=>i));pos=0;front=0;
+          imgs[0].classList.add("show");imgs[0].src=imgURL(ids[order[0]]);
+          const nid=ids[order[1%order.length]];if(nid){const p=new Image();p.src=imgURL(nid);}
+          renderDots();start();
+        })
+        .catch(()=>showState("error"));
+    }
+    el.addEventListener("mouseenter",()=>{paused=true;});
+    el.addEventListener("mouseleave",()=>{paused=false;});
+    el.addEventListener("click",e=>{if(e.target.closest("[data-retry]"))load();});
+    el._reload=load;el._tag=tag;
+    load();
+  }
+
+  document.querySelectorAll(".gallery").forEach(el=>{if(!el._init){el._init=1;Gallery(el);}});
+
+  function reloadTag(tag){
+    document.querySelectorAll(".gallery").forEach(el=>{
+      if(el._tag===tag||el.dataset.global==="1"){el._reload&&el._reload();}
+    });
+  }
+
+  /* ---------- upload UI ---------- */
+  const fab=document.createElement("button");
+  fab.className="up-fab";fab.type="button";
+  fab.innerHTML=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>Add photos</span>`;
+  document.body.appendChild(fab);
+
+  const modal=document.createElement("div");
+  modal.className="up-modal";
+  modal.innerHTML=`
+    <div class="up-card">
+      <button class="up-x" data-close>×</button>
+      <h3>Add photos</h3>
+      <p class="up-lead">They'll appear in the shuffle up top and on the destination you choose.</p>
+      <div class="up-field"><label>Destination</label>
+        <select id="upDest">${DESTS.map(d=>`<option value="${d.id}">${d.label}</option>`).join("")}</select></div>
+      <div class="up-field"><label>Your name (shown as the credit)</label>
+        <input type="text" id="upBy" placeholder="Ronnie or Josh" autocomplete="name"></div>
+      <div class="up-field"><label>Pass-phrase</label>
+        <input type="password" id="upSecret" placeholder="the shared word you both know"></div>
+      <div class="up-drop" id="upDrop"><b>Choose photos</b> or drop them here
+        <input type="file" id="upFile" accept="image/*" multiple hidden></div>
+      <div class="up-thumbs" id="upThumbs"></div>
+      <button class="up-go" id="upGo" disabled>Upload</button>
+      <div class="up-status" id="upStatus"></div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  const mq=s=>modal.querySelector(s);
+  const drop=mq("#upDrop"),fileIn=mq("#upFile"),thumbsEl=mq("#upThumbs"),
+        goBtn=mq("#upGo"),statusEl=mq("#upStatus"),
+        destSel=mq("#upDest"),byIn=mq("#upBy"),secretIn=mq("#upSecret");
+  let chosen=[];
+
+  try{byIn.value=localStorage.getItem("tripUpBy")||"";secretIn.value=localStorage.getItem("tripUpSecret")||"";}catch(e){}
+
+  const openModal=tag=>{if(tag)destSel.value=tag;modal.classList.add("open");};
+  const closeModal=()=>modal.classList.remove("open");
+  fab.addEventListener("click",()=>openModal());
+  modal.addEventListener("click",e=>{if(e.target===modal||e.target.closest("[data-close]"))closeModal();});
+  document.addEventListener("click",e=>{const b=e.target.closest("[data-open-up]");if(b)openModal(b.getAttribute("data-open-up"));});
+
+  drop.addEventListener("click",()=>fileIn.click());
+  drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("drag");});
+  drop.addEventListener("dragleave",()=>drop.classList.remove("drag"));
+  drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("drag");addFiles(e.dataTransfer.files);});
+  fileIn.addEventListener("change",()=>addFiles(fileIn.files));
+
+  function addFiles(list){[...list].filter(f=>f.type.startsWith("image/")).forEach(f=>chosen.push(f));renderThumbs();goBtn.disabled=!chosen.length;}
+  function renderThumbs(){thumbsEl.innerHTML="";chosen.forEach(f=>{const u=URL.createObjectURL(f);const d=document.createElement("div");d.className="ut";d.innerHTML=`<img src="${u}">`;thumbsEl.appendChild(d);});}
+
+  function compress(file){
+    return new Promise(res=>{
+      const img=new Image();
+      img.onload=()=>{
+        const MAX=1600;let w=img.width,h=img.height;
+        if(w>MAX||h>MAX){const s=Math.min(MAX/w,MAX/h);w=Math.round(w*s);h=Math.round(h*s);}
+        const c=document.createElement("canvas");c.width=w;c.height=h;
+        c.getContext("2d").drawImage(img,0,0,w,h);
+        c.toBlob(b=>res(b||file),"image/jpeg",0.82);
+      };
+      img.onerror=()=>res(file);
+      img.src=URL.createObjectURL(file);
+    });
+  }
+  const setStatus=(t,cls)=>{statusEl.textContent=t;statusEl.className="up-status"+(cls?" "+cls:"");};
+
+  goBtn.addEventListener("click",async()=>{
+    if(!chosen.length)return;
+    const tag=destSel.value,by=byIn.value.trim(),secret=secretIn.value;
+    if(!secret){setStatus("Enter the pass-phrase first.","err");return;}
+    try{localStorage.setItem("tripUpBy",by);localStorage.setItem("tripUpSecret",secret);}catch(e){}
+    goBtn.disabled=true;let ok=0,fail=0;
+    for(let i=0;i<chosen.length;i++){
+      setStatus(`Uploading ${i+1} of ${chosen.length}…`);
+      try{
+        const blob=await compress(chosen[i]);
+        const fd=new FormData();
+        fd.append("file",blob,"photo.jpg");fd.append("tag",tag);fd.append("by",by);fd.append("secret",secret);
+        const r=await fetch(API,{method:"POST",body:fd});
+        if(r.ok)ok++;
+        else{fail++;if(r.status===401){setStatus("Wrong pass-phrase (or the site's UPLOAD_SECRET isn't set yet).","err");goBtn.disabled=false;return;}}
+      }catch(e){fail++;}
+    }
+    setStatus(ok?`Added ${ok} photo${ok>1?"s":""}${fail?` · ${fail} failed`:""} ✓`:"Upload failed — check your connection.",ok?"ok":"err");
+    if(ok){chosen=[];renderThumbs();fileIn.value="";reloadTag(tag);setTimeout(closeModal,1200);}
+    goBtn.disabled=false;
+  });
+})();
 </script>
 </body>
 </html>

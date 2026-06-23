@@ -1,0 +1,8 @@
+{
+  "name": "trips-by-ronnie-and-josh",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
