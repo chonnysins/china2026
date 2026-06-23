@@ -982,10 +982,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .snaps{padding:30px 0 8px}
   .snaps h2{font-size:clamp(24px,4.5vw,34px)}
   .snaps-sub{color:var(--muted);font-size:14px;margin:8px 0 18px;max-width:560px}
-  .gallery{position:relative;width:100%;aspect-ratio:16/10;border:1px solid var(--line);border-radius:var(--radius);
-    overflow:hidden;background:var(--ink-3)}
-  .gallery.gallery-lg{aspect-ratio:16/8}
-  .region .gallery{margin:16px 0 4px;aspect-ratio:16/9}
+  .gallery{position:relative;width:100%;max-width:380px;margin-inline:auto;--gph-ar:9/16;aspect-ratio:var(--gph-ar);
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--ink-3)}
+  .gallery.gallery-lg{max-width:420px}
+  .region .gallery{margin:16px auto 4px}
   .gallery .gph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .7s ease}
   .gallery .gph.show{opacity:1}
   .gallery .gph-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
