@@ -1006,6 +1006,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .gallery:hover .gph-del{opacity:1}
   .gallery .gph-del:hover{background:#C0492F}
   @media(hover:none){.gallery .gph-del{opacity:.85}}
+  .gallery .gph-heart{position:absolute;bottom:9px;right:9px;z-index:4;width:32px;height:32px;border-radius:50%;
+    border:0;background:rgba(24,34,45,.45);color:rgba(255,255,255,.75);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,transform .15s}
+  .gallery .gph-heart svg{width:16px;height:16px;display:block}
+  .gallery .gph-heart:hover{transform:scale(1.08)}
+  .gallery .gph-heart.on{background:#D6405A;color:#fff}
+
+  .snaps-row{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+  .snaps-col{flex:1 1 360px;max-width:420px}
+  .snaps-col .snaps-lbl{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);text-align:center;margin-bottom:9px}
+  .snaps-col .gallery{max-width:100%}
 
   .up-fab{position:fixed;right:18px;bottom:18px;z-index:60;display:flex;align-items:center;gap:9px;
     font-family:"Space Mono",monospace;font-size:13px;font-weight:700;letter-spacing:.02em;
@@ -1085,8 +1097,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <!-- OUR PHOTOS — live shuffle of everything uploaded -->
   <section class="snaps" id="snaps">
     <h2>Our snapshots</h2>
-    <p class="snaps-sub">Photos you and Ronnie upload land here and on each destination below — they shuffle every few seconds.</p>
-    <div class="gallery gallery-lg" data-tag="" data-global="1"></div>
+    <p class="snaps-sub">Today's uploads on the left, everyone's favourites on the right — tap ♥ on any photo to add it to favourites.</p>
+    <div class="snaps-row">
+      <div class="snaps-col">
+        <div class="snaps-lbl">Today</div>
+        <div class="gallery gallery-lg" data-scope="daily"></div>
+      </div>
+      <div class="snaps-col">
+        <div class="snaps-lbl">♥ Favourites</div>
+        <div class="gallery gallery-lg" data-scope="favourites"></div>
+      </div>
+    </div>
   </section>
 
   <!-- regions render here -->
@@ -2057,89 +2078,127 @@ $("#jumpBtn").addEventListener("click",()=>{
   const API="/.netlify/functions/photos";
   const SHUFFLE_MS=3000;
   const DESTS=TRIP.legs.map(l=>({id:l.id,label:l.short}));
+  const HEART_SVG=`<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C.3 8.6 2 5 5.7 5c2 0 3.4 1.1 4.3 2.4C10.9 6.1 12.3 5 14.3 5 18 5 19.7 8.6 18 11.7 19.5 16.3 12 21 12 21z" fill="currentColor"/></svg>`;
 
   const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
   const imgURL=id=>API+"?id="+encodeURIComponent(id);
+  const localISODate=(d=new Date())=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const getSecret=()=>{try{return localStorage.getItem("tripUpSecret")||"";}catch(e){return "";}};
+  const saveSecret=s=>{try{localStorage.setItem("tripUpSecret",s);}catch(e){}};
+
+  const galleries=[];
+  function reloadAllGalleries(){galleries.forEach(g=>g.reload());}
 
   function Gallery(el){
     const tag=el.dataset.tag||"";
-    let ids=[],order=[],pos=0,timer=null,imgs=[],paused=false,front=0;
+    const scope=el.dataset.scope||"";
+    let recs=[],order=[],pos=0,timer=null,imgs=[],paused=false,front=0,delBtn=null,heartBtn=null;
 
+    function emptyCopy(){
+      if(scope==="daily")return "No photos uploaded today yet";
+      if(scope==="favourites")return "No favourites yet — tap ♥ on a photo you love";
+      return "No photos here yet";
+    }
     function showState(kind){
       el.classList.remove("is-empty","is-error");
       el.classList.add(kind==="empty"?"is-empty":"is-error");
       if(kind==="empty"){
-        el.innerHTML=`<div class="gph-state"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5L5 19"/></svg><div>No photos here yet</div><button class="gph-mini" data-open-up="${tag}">＋ Add the first one</button></div>`;
+        const addBtn=tag?`<button class="gph-mini" data-open-up="${tag}">＋ Add the first one</button>`:"";
+        el.innerHTML=`<div class="gph-state"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5L5 19"/></svg><div>${emptyCopy()}</div>${addBtn}</div>`;
       } else {
         el.innerHTML=`<div class="gph-state"><div>Couldn't load photos</div><button class="gph-mini" data-retry="1">Retry</button></div>`;
       }
     }
     function build(){
       el.classList.remove("is-empty","is-error");
-      el.innerHTML=`<button class="gph-del" data-del="1" title="Delete the photo showing now">🗑</button><div class="gph-grad"></div><div class="gph-dots"></div>`;
+      el.innerHTML=`<button class="gph-del" data-del="1" title="Delete the photo showing now">🗑</button><button class="gph-heart" data-heart="1" title="Add to favourites">${HEART_SVG}</button><div class="gph-grad"></div><div class="gph-dots"></div>`;
+      delBtn=el.querySelector(".gph-del");heartBtn=el.querySelector(".gph-heart");
       imgs=[];
       for(let k=0;k<2;k++){const im=document.createElement("img");im.className="gph";im.alt="";im.loading="lazy";im.decoding="async";el.insertBefore(im,el.firstChild);imgs.push(im);}
     }
     function renderDots(){
       const d=el.querySelector(".gph-dots");if(!d)return;
-      if(ids.length<=1||ids.length>12){d.innerHTML="";return;}
-      d.innerHTML=ids.map((_,i)=>`<i class="${i===order[pos]?'on':''}"></i>`).join("");
+      if(recs.length<=1||recs.length>12){d.innerHTML="";return;}
+      d.innerHTML=recs.map((_,i)=>`<i class="${i===order[pos]?'on':''}"></i>`).join("");
+    }
+    function syncHeart(){
+      if(!heartBtn)return;
+      const rec=recs[order[pos]];if(!rec)return;
+      heartBtn.classList.toggle("on",!!rec.heart);
+      heartBtn.dataset.id=rec.id;
     }
     function show(i){
-      const id=ids[order[i]];if(!id)return;
+      const rec=recs[order[i]];if(!rec)return;
       const cur=imgs[front],nxt=imgs[front^1];
-      nxt.onload=()=>{nxt.classList.add("show");cur.classList.remove("show");front^=1;renderDots();};
-      nxt.src=imgURL(id);
-      const nid=ids[order[(i+1)%order.length]];if(nid){const p=new Image();p.src=imgURL(nid);}
+      nxt.onload=()=>{nxt.classList.add("show");cur.classList.remove("show");front^=1;renderDots();syncHeart();};
+      nxt.src=imgURL(rec.id);
+      if(delBtn)delBtn.dataset.id=rec.id;
+      const nrec=recs[order[(i+1)%order.length]];if(nrec){const p=new Image();p.src=imgURL(nrec.id);}
     }
     function step(){if(paused||order.length<2)return;pos=(pos+1)%order.length;show(pos);}
     function start(){stop();if(order.length>1)timer=setInterval(step,SHUFFLE_MS);}
     function stop(){if(timer){clearInterval(timer);timer=null;}}
     function load(){
       stop();
-      fetch(API+"?list=1"+(tag?"&tag="+encodeURIComponent(tag):""),{cache:"no-store"})
+      let qs="list=1";
+      if(tag)qs+="&tag="+encodeURIComponent(tag);
+      if(scope==="favourites")qs+="&scope=favourites";
+      if(scope==="daily")qs+="&scope=daily&day="+encodeURIComponent(localISODate());
+      fetch(API+"?"+qs,{cache:"no-store"})
         .then(r=>{if(!r.ok)throw 0;return r.json();})
         .then(j=>{
-          ids=(j.photos||[]).map(p=>p.id);
-          if(!ids.length){showState("empty");return;}
-          build();order=shuffle(ids.map((_,i)=>i));pos=0;front=0;
-          imgs[0].classList.add("show");imgs[0].src=imgURL(ids[order[0]]);
-          const nid=ids[order[1%order.length]];if(nid){const p=new Image();p.src=imgURL(nid);}
-          renderDots();start();
+          recs=j.photos||[];
+          if(!recs.length){showState("empty");return;}
+          build();order=shuffle(recs.map((_,i)=>i));pos=0;front=0;
+          imgs[0].classList.add("show");imgs[0].src=imgURL(recs[order[0]].id);
+          if(delBtn)delBtn.dataset.id=recs[order[0]].id;
+          const nrec=recs[order[1%order.length]];if(nrec){const p=new Image();p.src=imgURL(nrec.id);}
+          renderDots();syncHeart();start();
         })
         .catch(()=>showState("error"));
     }
     el.addEventListener("mouseenter",()=>{paused=true;});
     el.addEventListener("mouseleave",()=>{paused=false;});
+
     function deleteCurrent(){
-      const id=ids[order[pos]];if(!id)return;
+      const rec=recs[order[pos]];if(!rec)return;
       if(!confirm("Delete this photo for both of you? This can't be undone."))return;
-      let secret="";try{secret=localStorage.getItem("tripUpSecret")||"";}catch(e){}
+      let secret=getSecret();
       if(!secret){secret=prompt("Enter the shared pass-phrase to delete:")||"";if(!secret)return;}
       stop();
-      fetch(API+"?id="+encodeURIComponent(id),{method:"DELETE",headers:{"x-upload-secret":secret}})
+      fetch(API+"?id="+encodeURIComponent(rec.id),{method:"DELETE",headers:{"x-upload-secret":secret}})
         .then(r=>{
           if(r.status===401){alert("Wrong pass-phrase — nothing was deleted.");start();return;}
           if(!r.ok){alert("Couldn't delete — please try again.");start();return;}
-          reloadTag(tag);
+          reloadAllGalleries();
         })
         .catch(()=>{alert("Couldn't delete — check your connection.");start();});
     }
+    function toggleHeart(btn){
+      const id=btn.dataset.id;if(!id)return;
+      let secret=getSecret();
+      if(!secret){secret=prompt("Enter the shared pass-phrase to favourite photos:")||"";if(!secret)return;}
+      const wasOn=btn.classList.contains("on");
+      btn.classList.toggle("on",!wasOn); // optimistic
+      fetch(API+"?id="+encodeURIComponent(id),{method:"PATCH",headers:{"x-upload-secret":secret}})
+        .then(r=>{
+          if(r.status===401){btn.classList.toggle("on",wasOn);alert("Wrong pass-phrase — nothing changed.");return;}
+          if(!r.ok){btn.classList.toggle("on",wasOn);return;}
+          saveSecret(secret);
+          reloadAllGalleries();
+        })
+        .catch(()=>{btn.classList.toggle("on",wasOn);});
+    }
     el.addEventListener("click",e=>{
       if(e.target.closest("[data-del]")){deleteCurrent();return;}
+      if(e.target.closest("[data-heart]")){toggleHeart(e.target.closest("[data-heart]"));return;}
       if(e.target.closest("[data-retry]"))load();
     });
-    el._reload=load;el._tag=tag;
+    galleries.push({reload:load,el});
     load();
   }
 
   document.querySelectorAll(".gallery").forEach(el=>{if(!el._init){el._init=1;Gallery(el);}});
-
-  function reloadTag(tag){
-    document.querySelectorAll(".gallery").forEach(el=>{
-      if(el._tag===tag||el.dataset.global==="1"){el._reload&&el._reload();}
-    });
-  }
 
   /* ---------- upload UI ---------- */
   const fab=document.createElement("button");
@@ -2153,7 +2212,7 @@ $("#jumpBtn").addEventListener("click",()=>{
     <div class="up-card">
       <button class="up-x" data-close>×</button>
       <h3>Add photos</h3>
-      <p class="up-lead">They'll appear in the shuffle up top and on the destination you choose.</p>
+      <p class="up-lead">They'll appear in Today's strip and on the destination you choose. Tap ♥ on any photo later to favourite it.</p>
       <div class="up-field"><label>Destination</label>
         <select id="upDest">${DESTS.map(d=>`<option value="${d.id}">${d.label}</option>`).join("")}</select></div>
       <div class="up-field"><label>Your name (shown as the credit)</label>
@@ -2174,7 +2233,7 @@ $("#jumpBtn").addEventListener("click",()=>{
         destSel=mq("#upDest"),byIn=mq("#upBy"),secretIn=mq("#upSecret");
   let chosen=[];
 
-  try{byIn.value=localStorage.getItem("tripUpBy")||"";secretIn.value=localStorage.getItem("tripUpSecret")||"";}catch(e){}
+  try{byIn.value=localStorage.getItem("tripUpBy")||"";secretIn.value=getSecret();}catch(e){}
 
   const openModal=tag=>{if(tag)destSel.value=tag;modal.classList.add("open");};
   const closeModal=()=>modal.classList.remove("open");
@@ -2211,21 +2270,23 @@ $("#jumpBtn").addEventListener("click",()=>{
     if(!chosen.length)return;
     const tag=destSel.value,by=byIn.value.trim(),secret=secretIn.value;
     if(!secret){setStatus("Enter the pass-phrase first.","err");return;}
-    try{localStorage.setItem("tripUpBy",by);localStorage.setItem("tripUpSecret",secret);}catch(e){}
+    try{localStorage.setItem("tripUpBy",by);}catch(e){}
+    saveSecret(secret);
+    const day=localISODate();
     goBtn.disabled=true;let ok=0,fail=0;
     for(let i=0;i<chosen.length;i++){
       setStatus(`Uploading ${i+1} of ${chosen.length}…`);
       try{
         const blob=await compress(chosen[i]);
         const fd=new FormData();
-        fd.append("file",blob,"photo.jpg");fd.append("tag",tag);fd.append("by",by);fd.append("secret",secret);
+        fd.append("file",blob,"photo.jpg");fd.append("tag",tag);fd.append("by",by);fd.append("day",day);fd.append("secret",secret);
         const r=await fetch(API,{method:"POST",body:fd});
         if(r.ok)ok++;
         else{fail++;if(r.status===401){setStatus("Wrong pass-phrase (or the site's UPLOAD_SECRET isn't set yet).","err");goBtn.disabled=false;return;}}
       }catch(e){fail++;}
     }
     setStatus(ok?`Added ${ok} photo${ok>1?"s":""}${fail?` · ${fail} failed`:""} ✓`:"Upload failed — check your connection.",ok?"ok":"err");
-    if(ok){chosen=[];renderThumbs();fileIn.value="";reloadTag(tag);setTimeout(closeModal,1200);}
+    if(ok){chosen=[];renderThumbs();fileIn.value="";reloadAllGalleries();setTimeout(closeModal,1200);}
     goBtn.disabled=false;
   });
 })();

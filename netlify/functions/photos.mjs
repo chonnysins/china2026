@@ -2,16 +2,30 @@ import { getStore } from "@netlify/blobs";
 import { randomUUID } from "node:crypto";
 
 const STORE = "trip-photos";
+const INDEX_KEY = "_index.json";
 const TAG_RE = /^[a-z0-9_-]{1,32}$/;
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_BYTES = 9 * 1024 * 1024; // 9 MB safety cap (client already compresses)
+
+async function readIndex(store) {
+  const list = await store.get(INDEX_KEY, { type: "json" });
+  return Array.isArray(list) ? list : [];
+}
+async function writeIndex(store, list) {
+  await store.setJSON(INDEX_KEY, list);
+}
+function authorized(req) {
+  const expected = process.env.UPLOAD_SECRET || "";
+  return !!expected && req.headers.get("x-upload-secret") === expected;
+}
 
 export default async (req) => {
   const store = getStore(STORE);
   const url = new URL(req.url);
+  const id = url.searchParams.get("id");
 
   // ---- serve a single image: GET ?id=<tag>/<uuid> ----
-  const id = url.searchParams.get("id");
-  if (req.method === "GET" && id) {
+  if (req.method === "GET" && id && !url.searchParams.get("list")) {
     const res = await store.getWithMetadata(id, { type: "arrayBuffer" });
     if (!res) return new Response("Not found", { status: 404 });
     return new Response(res.data, {
@@ -23,18 +37,20 @@ export default async (req) => {
     });
   }
 
-  // ---- list photos: GET ?list=1[&tag=shanghai] ----
+  // ---- list: GET ?list=1[&tag=shanghai][&scope=daily&day=YYYY-MM-DD][&scope=favourites] ----
   if (req.method === "GET" && url.searchParams.get("list")) {
     const tag = url.searchParams.get("tag") || "";
-    const prefix = tag ? tag + "/" : "";
-    const { blobs } = await store.list({ prefix });
-    const photos = blobs
-      .map((b) => ({ id: b.key, tag: b.key.split("/")[0] }))
-      .reverse();
-    return Response.json({ photos }, { headers: { "cache-control": "no-store" } });
+    const scope = url.searchParams.get("scope") || "";
+    const day = url.searchParams.get("day") || "";
+    let items = await readIndex(store);
+    if (tag) items = items.filter((p) => p.tag === tag);
+    if (scope === "favourites") items = items.filter((p) => p.heart);
+    if (scope === "daily") items = items.filter((p) => p.day === day);
+    items = items.slice().reverse(); // newest first
+    return Response.json({ photos: items }, { headers: { "cache-control": "no-store" } });
   }
 
-  // ---- upload: POST multipart/form-data (file, tag, by, secret) ----
+  // ---- upload: POST multipart/form-data (file, tag, by, day, secret) ----
   if (req.method === "POST") {
     let form;
     try { form = await req.formData(); }
@@ -53,23 +69,39 @@ export default async (req) => {
     if (file.size > MAX_BYTES) return new Response("File too large", { status: 413 });
 
     const by = String(form.get("by") || "").slice(0, 60);
-    const key = `${tag}/${randomUUID()}`;
+    const dayRaw = String(form.get("day") || "");
+    const day = DAY_RE.test(dayRaw) ? dayRaw : "";
+
+    const photoId = `${tag}/${randomUUID()}`;
     const buf = await file.arrayBuffer();
-    await store.set(key, buf, {
-      metadata: { ct: file.type || "image/jpeg", by, ts: Date.now() }
-    });
-    return Response.json({ ok: true, id: key });
+    await store.set(photoId, buf, { metadata: { ct: file.type || "image/jpeg" } });
+
+    const items = await readIndex(store);
+    items.push({ id: photoId, tag, by, day, heart: false, ts: Date.now() });
+    await writeIndex(store, items);
+
+    return Response.json({ ok: true, id: photoId });
   }
 
-  // ---- delete: DELETE ?id=<tag>/<uuid>  (pass-phrase via x-upload-secret header) ----
+  // ---- heart toggle: PATCH ?id=<tag>/<uuid>  (x-upload-secret header) ----
+  if (req.method === "PATCH") {
+    if (!authorized(req)) return new Response("Unauthorized", { status: 401 });
+    if (!id) return new Response("No id", { status: 400 });
+    const items = await readIndex(store);
+    const rec = items.find((p) => p.id === id);
+    if (!rec) return new Response("Not found", { status: 404 });
+    rec.heart = !rec.heart;
+    await writeIndex(store, items);
+    return Response.json({ ok: true, heart: rec.heart });
+  }
+
+  // ---- delete: DELETE ?id=<tag>/<uuid>  (x-upload-secret header) ----
   if (req.method === "DELETE") {
-    const expected = process.env.UPLOAD_SECRET || "";
-    if (!expected || req.headers.get("x-upload-secret") !== expected) {
-      return new Response("Unauthorized", { status: 401 });
-    }
-    const delId = url.searchParams.get("id");
-    if (!delId) return new Response("No id", { status: 400 });
-    await store.delete(delId);
+    if (!authorized(req)) return new Response("Unauthorized", { status: 401 });
+    if (!id) return new Response("No id", { status: 400 });
+    await store.delete(id);
+    const items = await readIndex(store);
+    await writeIndex(store, items.filter((p) => p.id !== id));
     return Response.json({ ok: true });
   }
 
