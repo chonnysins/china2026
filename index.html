@@ -1000,6 +1000,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .gallery .gph-grad{position:absolute;left:0;right:0;bottom:0;height:46px;z-index:2;pointer-events:none;
     background:linear-gradient(0deg,rgba(0,0,0,.28),transparent)}
   .gallery.is-empty .gph-grad,.gallery.is-error .gph-grad{display:none}
+  .gallery .gph-del{position:absolute;top:9px;right:9px;z-index:4;width:30px;height:30px;border-radius:50%;
+    border:0;background:rgba(24,34,45,.55);color:#fff;font-size:14px;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s,background .2s}
+  .gallery:hover .gph-del{opacity:1}
+  .gallery .gph-del:hover{background:#C0492F}
+  @media(hover:none){.gallery .gph-del{opacity:.85}}
 
   .up-fab{position:fixed;right:18px;bottom:18px;z-index:60;display:flex;align-items:center;gap:9px;
     font-family:"Space Mono",monospace;font-size:13px;font-weight:700;letter-spacing:.02em;
@@ -2070,7 +2076,7 @@ $("#jumpBtn").addEventListener("click",()=>{
     }
     function build(){
       el.classList.remove("is-empty","is-error");
-      el.innerHTML=`<div class="gph-grad"></div><div class="gph-dots"></div>`;
+      el.innerHTML=`<button class="gph-del" data-del="1" title="Delete the photo showing now">🗑</button><div class="gph-grad"></div><div class="gph-dots"></div>`;
       imgs=[];
       for(let k=0;k<2;k++){const im=document.createElement("img");im.className="gph";im.alt="";im.loading="lazy";im.decoding="async";el.insertBefore(im,el.firstChild);imgs.push(im);}
     }
@@ -2105,7 +2111,24 @@ $("#jumpBtn").addEventListener("click",()=>{
     }
     el.addEventListener("mouseenter",()=>{paused=true;});
     el.addEventListener("mouseleave",()=>{paused=false;});
-    el.addEventListener("click",e=>{if(e.target.closest("[data-retry]"))load();});
+    function deleteCurrent(){
+      const id=ids[order[pos]];if(!id)return;
+      if(!confirm("Delete this photo for both of you? This can't be undone."))return;
+      let secret="";try{secret=localStorage.getItem("tripUpSecret")||"";}catch(e){}
+      if(!secret){secret=prompt("Enter the shared pass-phrase to delete:")||"";if(!secret)return;}
+      stop();
+      fetch(API+"?id="+encodeURIComponent(id),{method:"DELETE",headers:{"x-upload-secret":secret}})
+        .then(r=>{
+          if(r.status===401){alert("Wrong pass-phrase — nothing was deleted.");start();return;}
+          if(!r.ok){alert("Couldn't delete — please try again.");start();return;}
+          reloadTag(tag);
+        })
+        .catch(()=>{alert("Couldn't delete — check your connection.");start();});
+    }
+    el.addEventListener("click",e=>{
+      if(e.target.closest("[data-del]")){deleteCurrent();return;}
+      if(e.target.closest("[data-retry]"))load();
+    });
     el._reload=load;el._tag=tag;
     load();
   }

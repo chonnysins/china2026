@@ -61,5 +61,17 @@ export default async (req) => {
     return Response.json({ ok: true, id: key });
   }
 
+  // ---- delete: DELETE ?id=<tag>/<uuid>  (pass-phrase via x-upload-secret header) ----
+  if (req.method === "DELETE") {
+    const expected = process.env.UPLOAD_SECRET || "";
+    if (!expected || req.headers.get("x-upload-secret") !== expected) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+    const delId = url.searchParams.get("id");
+    if (!delId) return new Response("No id", { status: 400 });
+    await store.delete(delId);
+    return Response.json({ ok: true });
+  }
+
   return new Response("Method not allowed", { status: 405 });
 };
