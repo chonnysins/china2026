@@ -61,3 +61,17 @@ every upload returns 401 and the app says "pass-phrase / UPLOAD_SECRET not set".
   domain over the bare `*.netlify.app` address for better odds through the firewall.
 - **Bake-in fallback still works:** any photo you want guaranteed-visible no matter
   what, send to Claude to embed directly the old way.
+
+## Install it on your phone (PWA)
+The site is an installable app. On your Android phone, open the live URL in Chrome:
+- Tap the **Install app** button (bottom-left), or use Chrome's menu → **Install app / Add to Home screen**.
+- It gets its own icon and opens full-screen, no browser bars.
+
+Once installed and opened at least once, the **static trip works offline** — itinerary,
+bookings, day cards, maps, and any photos you've already viewed are cached, so they open
+with no signal (planes, tunnels, dead zones behind the firewall). Uploading and hearting
+still need a connection (those are shared and live on the backend); they fail gracefully
+offline and work again once you're back online.
+
+After you push an update, the app refreshes to the new version the next time it's opened
+with a connection (occasionally one relaunch later).

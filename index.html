@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0E9E8E" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="apple-touch-icon" href="/icons/icon-192.png" />
 <title>Trips by Ronnie and Josh — A China Winter Journey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -1026,6 +1029,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .up-fab:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(14,158,142,.4)}
   .up-fab svg{display:block}
   @media(max-width:560px){.up-fab span{display:none}.up-fab{padding:14px;border-radius:50%}}
+  .pwa-install{position:fixed;left:18px;bottom:18px;z-index:60;display:flex;align-items:center;gap:8px;
+    font-family:"Space Mono",monospace;font-size:12px;font-weight:700;letter-spacing:.02em;
+    background:var(--ink-2);color:#0E9E8E;border:1px solid #0E9E8E;border-radius:999px;padding:11px 15px;
+    cursor:pointer;box-shadow:0 6px 18px rgba(24,34,45,.12)}
+  .pwa-install:hover{background:#0E9E8E;color:#fff}
+  @media(max-width:560px){.pwa-install span{display:none}.pwa-install{padding:12px;border-radius:50%}}
   .up-modal{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:20px;
     background:rgba(24,34,45,.42);backdrop-filter:blur(4px)}
   .up-modal.open{display:flex}
@@ -2293,6 +2302,27 @@ $("#jumpBtn").addEventListener("click",()=>{
     if(ok){chosen=[];renderThumbs();fileIn.value="";reloadAllGalleries();setTimeout(closeModal,1200);}
     goBtn.disabled=false;
   });
+})();
+
+/* ---------- PWA: install prompt + offline service worker ---------- */
+(function(){
+  if("serviceWorker" in navigator){
+    window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{});});
+  }
+  let deferred=null;
+  const btn=document.createElement("button");
+  btn.className="pwa-install";btn.type="button";
+  btn.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span>Install app</span>`;
+  btn.style.display="none";
+  document.body.appendChild(btn);
+  window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferred=e;btn.style.display="";});
+  btn.addEventListener("click",async()=>{
+    if(!deferred)return;
+    deferred.prompt();
+    try{await deferred.userChoice;}catch(e){}
+    deferred=null;btn.style.display="none";
+  });
+  window.addEventListener("appinstalled",()=>{btn.style.display="none";});
 })();
 </script>
 </body>

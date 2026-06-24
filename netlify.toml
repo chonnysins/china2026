@@ -4,3 +4,15 @@
 
 [functions]
   node_bundler = "esbuild"
+
+# Never let the browser hold a stale service worker — it must re-check on each load
+# so new deploys roll out. (The SW itself manages caching of everything else.)
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
