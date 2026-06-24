@@ -2,7 +2,7 @@
    Goal: the static trip (itinerary, bookings, day cards, maps, already-seen
    photos) works fully offline; live photo actions degrade gracefully with no
    signal. Bump CACHE_VERSION whenever you want to force a clean refresh. */
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const SHELL = `trip-shell-${CACHE_VERSION}`;
 const IMG   = `trip-img-${CACHE_VERSION}`;
 const RT    = `trip-runtime-${CACHE_VERSION}`;
@@ -77,15 +77,15 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET") return; // uploads/hearts/deletes always go to network
 
   const url = new URL(req.url);
-  const isFn = url.origin === location.origin && url.pathname === FN;
+  const isFn = url.origin === location.origin && url.pathname.startsWith("/.netlify/functions/");
 
   // Photo image bytes are immutable → cache hard so seen photos work offline.
   if (isFn && url.searchParams.has("id")) {
     e.respondWith(cacheFirst(req, IMG));
     return;
   }
-  // Photo lists → prefer fresh; fall back to last-known list when offline.
-  if (isFn && url.searchParams.has("list")) {
+  // Any other backend call (photo lists, checklist) → fresh first, cached fallback offline.
+  if (isFn) {
     e.respondWith(networkFirst(req, RT));
     return;
   }

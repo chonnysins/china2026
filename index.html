@@ -796,6 +796,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .rart .lbl{position:absolute;left:16px;bottom:13px;z-index:3;font-family:"Space Mono",monospace;font-size:11px;
     letter-spacing:.14em;text-transform:uppercase;color:var(--paper);display:flex;align-items:center;gap:8px}
   .rart .lbl .pin{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px 1px var(--accent)}
+  .rart .rname{position:absolute;left:18px;bottom:15px;z-index:3;display:flex;align-items:center;gap:10px;
+    font-family:"Bricolage Grotesque";font-weight:800;font-size:clamp(22px,5.2vw,34px);color:#fff;
+    letter-spacing:-.01em;text-shadow:0 2px 16px rgba(0,0,0,.6);padding-right:16px;line-height:1.05}
+  .rart .rname .pin{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px 2px var(--accent);flex:0 0 auto}
   .rart .rcredit{position:absolute;right:10px;bottom:9px;z-index:3;font-family:"Space Mono",monospace;font-size:9px;color:rgba(255,255,255,.8);background:rgba(0,0,0,.34);padding:2px 8px;border-radius:7px;letter-spacing:.02em}
   .rart .rcredit a{color:inherit;text-decoration:none}
   .rart .rcredit a:hover{text-decoration:underline}
@@ -947,6 +951,20 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .bk-kv b{font-weight:600;font-size:13px;word-break:break-word}
   .bk-kv a{color:var(--accent,#0E9E8E);text-decoration:none}
   .bk-kv a:hover{text-decoration:underline}
+  .bk-checklist{max-width:760px;margin:34px auto 0}
+  .bk-cl-h{display:flex;align-items:center;gap:10px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:13px}
+  .bk-cl-add{display:flex;gap:9px;margin-bottom:14px}
+  .bk-cl-add input{flex:1;min-width:0;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:var(--ink-2);color:var(--paper);font-family:"Raleway","Inter",sans-serif;font-size:14px}
+  .bk-cl-add button{flex:0 0 auto;border:0;border-radius:11px;background:#0E9E8E;color:#fff;font-family:"Space Mono",monospace;font-weight:700;font-size:12px;letter-spacing:.04em;padding:0 18px;cursor:pointer}
+  .bk-cl-add button:hover{background:#0c8a7c}
+  .bk-cl-list{display:flex;flex-direction:column;gap:8px}
+  .bk-cl-empty{color:var(--muted);font-size:13px;font-style:italic;padding:4px 2px}
+  .bk-cl-item{display:flex;align-items:center;gap:11px;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:var(--ink-2)}
+  .bk-cl-item input[type=checkbox]{width:18px;height:18px;flex:0 0 auto;accent-color:#3F9A39;cursor:pointer}
+  .bk-cl-item span{flex:1;font-size:14px;word-break:break-word}
+  .bk-cl-item.done span{text-decoration:line-through;color:var(--muted)}
+  .bk-cl-x{flex:0 0 auto;border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:2px 4px}
+  .bk-cl-x:hover{color:#C0492F}
   /* ---------- compare ---------- */
   .compare{padding:60px 0 10px;scroll-margin-top:64px}
   .compare h2{font-size:clamp(28px,5vw,40px);text-align:center}
@@ -1015,6 +1033,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .gallery .gph-heart svg{width:16px;height:16px;display:block}
   .gallery .gph-heart:hover{transform:scale(1.08)}
   .gallery .gph-heart.on{background:#D6405A;color:#fff}
+  .gallery{cursor:pointer}
+  .gallery .gph-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:34px;height:34px;border:0;
+    border-radius:50%;background:rgba(24,34,45,.42);color:#fff;font-size:21px;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s,background .2s;padding:0}
+  .gallery .gph-nav.prev{left:8px}
+  .gallery .gph-nav.next{right:8px}
+  .gallery:hover .gph-nav{opacity:.92}
+  .gallery .gph-nav:hover{background:rgba(24,34,45,.72)}
+  @media(hover:none){.gallery .gph-nav{opacity:.6}}
 
   .snaps-row{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;margin-top:6px}
   .snaps-col{flex:1 1 360px;max-width:420px}
@@ -1082,8 +1109,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <!-- HERO -->
   <section class="hero">
     <div class="eyebrow">Dec 22 — Jan 9 · two travellers · one winter</div>
-    <h1>A China<br><span class="gd">winter journey</span></h1>
-    <p class="sub">Four cities, two trains, three flights and a whole lot of dumplings — from Shanghai's neon waterfront to snow-laced "Avatar" peaks, cyberpunk Chongqing, and the pandas of Chengdu.</p>
+    <h1>China <span class="gd">2026-27</span></h1>
 
     <div class="clock" id="clock">
       <div class="lab" id="clockLab">Countdown to Shanghai</div>
@@ -1777,7 +1803,7 @@ TRIP.legs.forEach(leg=>{
       ${regionArt(leg.id)}
       ${PHOTOS[leg.id]?`<img class="rphoto" src="${PHOTOS[leg.id].thumb}" data-full="${PHOTOS[leg.id].full}" alt="${leg.short}" loading="lazy" referrerpolicy="no-referrer" onerror="if(this.dataset.full){this.src=this.dataset.full;this.removeAttribute('data-full');}else{this.classList.add('failed');}">`:""}
       <div class="scrim"></div>
-      <div class="lbl"><span class="pin"></span>${leg.short}</div>
+      <div class="rname"><span class="pin"></span>${leg.name}</div>
       ${PHOTOS[leg.id]?`<div class="rcredit">📷 <a href="${PHOTOS[leg.id].page}" target="_blank" rel="noopener">${PHOTOS[leg.id].by} · ${PHOTOS[leg.id].lic}</a></div>`:""}
     </div>
     <div class="rhead">
@@ -1785,7 +1811,6 @@ TRIP.legs.forEach(leg=>{
       <h2>${leg.name.replace("&","<em>&</em>")}</h2>
       <span class="rmeta">${leg.dates}<br>${leg.nights} nights</span>
     </div>
-    <p class="rvibe">${leg.vibe}</p>
     <div class="gallery" data-tag="${leg.id}"></div>
     ${mapsHtml}
 
@@ -1862,10 +1887,58 @@ function renderBookings(){
       ${grp("✈","Flights",BOOKINGS.flights,flightCard)}
       ${grp("🏨","Accommodation",BOOKINGS.stays,stayCard)}
       ${grp("🚄","Trains",BOOKINGS.trains,trainCard)}
+    </div>
+    <div class="bk-checklist">
+      <div class="bk-cl-h">📝 Your details &amp; to-dos</div>
+      <div class="bk-cl-add">
+        <input type="text" id="clInput" placeholder="Add a detail or to-do…" maxlength="200" autocomplete="off">
+        <button id="clAdd" type="button">Add</button>
+      </div>
+      <div class="bk-cl-list" id="clList"></div>
     </div>`;
 
   const io2=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){const f=$("#bkFill");if(f)f.style.width=pct+"%";io2.disconnect();}});},{threshold:.3});
   io2.observe(el);
+  initChecklist();
+}
+
+/* ---------- shared bookings checklist ---------- */
+function initChecklist(){
+  const API="/.netlify/functions/checklist";
+  const listEl=$("#clList"), input=$("#clInput"), addBtn=$("#clAdd");
+  if(!listEl) return;
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const getSecret=()=>{try{return localStorage.getItem("tripUpSecret")||"";}catch(e){return"";}};
+  const saveSecret=s=>{try{localStorage.setItem("tripUpSecret",s);}catch(e){}};
+  let CL=[];
+  try{const c=JSON.parse(localStorage.getItem("tripChecklist")||"[]");if(Array.isArray(c))CL=c;}catch(e){}
+
+  function render(){
+    if(!CL.length){listEl.innerHTML=`<div class="bk-cl-empty">Nothing yet — add flight times, seat numbers, visa to-dos, anything to remember.</div>`;return;}
+    listEl.innerHTML=CL.map(it=>`<div class="bk-cl-item ${it.done?'done':''}"><input type="checkbox" data-id="${it.id}" ${it.done?'checked':''}><span>${esc(it.text)}</span><button class="bk-cl-x" data-del="${it.id}" type="button" title="Remove">×</button></div>`).join("");
+  }
+  function mirror(){try{localStorage.setItem("tripChecklist",JSON.stringify(CL));}catch(e){}}
+  function save(){
+    mirror();
+    let secret=getSecret();
+    if(!secret){secret=prompt("Enter the shared pass-phrase to save the checklist for both of you:")||"";if(!secret){return;}saveSecret(secret);}
+    fetch(API,{method:"PUT",headers:{"x-upload-secret":secret,"content-type":"application/json"},body:JSON.stringify({items:CL})})
+      .then(r=>{if(r.status===401)alert("Wrong pass-phrase — saved on this device, but not synced to the shared copy.");})
+      .catch(()=>{});
+  }
+  function add(){
+    const t=input.value.trim();if(!t)return;
+    CL.push({id:"c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),text:t,done:false});
+    input.value="";render();save();
+  }
+  addBtn.addEventListener("click",add);
+  input.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();add();}});
+  listEl.addEventListener("change",e=>{const cb=e.target.closest("input[type=checkbox]");if(!cb)return;const it=CL.find(x=>x.id===cb.dataset.id);if(it){it.done=cb.checked;render();save();}});
+  listEl.addEventListener("click",e=>{const b=e.target.closest("[data-del]");if(!b)return;CL=CL.filter(x=>x.id!==b.dataset.del);render();save();});
+
+  render();
+  // refresh from the shared copy
+  fetch(API,{cache:"no-store"}).then(r=>r.json()).then(j=>{if(Array.isArray(j.items)){CL=j.items;mirror();render();}}).catch(()=>{});
 }
 renderBookings();
 
@@ -2123,7 +2196,7 @@ $("#jumpBtn").addEventListener("click",()=>{
     }
     function build(){
       el.classList.remove("is-empty","is-error");
-      el.innerHTML=`<button class="gph-del" data-del="1" title="Delete the photo showing now">🗑</button><button class="gph-heart" data-heart="1" title="Add to favourites">${HEART_SVG}</button><div class="gph-grad"></div><div class="gph-dots"></div>`;
+      el.innerHTML=`<button class="gph-del" data-del="1" title="Delete the photo showing now">🗑</button><button class="gph-heart" data-heart="1" title="Add to favourites">${HEART_SVG}</button><button class="gph-nav prev" data-nav="-1" aria-label="Previous photo">‹</button><button class="gph-nav next" data-nav="1" aria-label="Next photo">›</button><div class="gph-grad"></div><div class="gph-dots"></div>`;
       delBtn=el.querySelector(".gph-del");heartBtn=el.querySelector(".gph-heart");
       imgs=[];
       for(let k=0;k<2;k++){const im=document.createElement("img");im.className="gph";im.alt="";im.loading="lazy";im.decoding="async";el.insertBefore(im,el.firstChild);imgs.push(im);}
@@ -2148,6 +2221,7 @@ $("#jumpBtn").addEventListener("click",()=>{
       const nrec=recs[order[(i+1)%order.length]];if(nrec){const p=new Image();p.src=imgURL(nrec.id);}
     }
     function step(){if(paused||order.length<2)return;pos=(pos+1)%order.length;show(pos);}
+    function go(dir){if(order.length<2)return;pos=(pos+dir+order.length)%order.length;show(pos);start();}
     function start(){stop();if(order.length>1)timer=setInterval(step,SHUFFLE_MS);}
     function stop(){if(timer){clearInterval(timer);timer=null;}}
     function load(){
@@ -2204,8 +2278,17 @@ $("#jumpBtn").addEventListener("click",()=>{
     el.addEventListener("click",e=>{
       if(e.target.closest("[data-del]")){deleteCurrent();return;}
       if(e.target.closest("[data-heart]")){toggleHeart(e.target.closest("[data-heart]"));return;}
-      if(e.target.closest("[data-retry]"))load();
+      if(e.target.closest("[data-retry]")){load();return;}
+      const nav=e.target.closest("[data-nav]");
+      if(nav){go(+nav.dataset.nav);return;}
+      go(1); // tap the photo to advance
     });
+    let tsx=null,tsy=null;
+    el.addEventListener("touchstart",e=>{const t=e.changedTouches[0];tsx=t.clientX;tsy=t.clientY;},{passive:true});
+    el.addEventListener("touchend",e=>{
+      if(tsx==null)return;const t=e.changedTouches[0];const dx=t.clientX-tsx,dy=t.clientY-tsy;tsx=null;
+      if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)){go(dx<0?1:-1);}
+    },{passive:true});
     galleries.push({reload:load,el});
     load();
   }
